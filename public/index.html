@@ -299,12 +299,7 @@
       <div class="stat-card"><div class="stat-value" id="learningCards">0</div><div class="stat-label">Learning</div></div>
     </div>
 
-    <div class="action-bar">
-      <button class="secondary-btn" id="importBtn">📥 Import</button>
-      <button class="secondary-btn" id="exportBtn">📤 Export</button>
-      <button class="secondary-btn" id="shuffleBtn">🔀 Shuffle</button>
-    </div>
-
+    <!-- Single Action Bar -->
     <div class="action-bar">
       <button class="secondary-btn" id="importBtn">📥 Import</button>
       <button class="secondary-btn" id="exportBtn">📤 Export</button>
@@ -312,47 +307,4 @@
       <button class="secondary-btn" id="resetBtn" style="background:#f44;color:white;">🧹 Reset</button>
     </div>
 
-    <div id="alertContainer"></div>
-    <div id="studyArea"></div>
-  </div>
-
-  <!-- Add Card Modal -->
-  <div class="modal" id="addCardModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Add New Card</h2>
-        <button class="close-btn" onclick="closeModal('addCardModal')">&times;</button>
-      </div>
-      <form id="addCardForm">
-        <div class="form-group">
-          <label for="frontInput">Front (Question/Topic)</label>
-          <textarea id="frontInput" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="backInput">Back (Answer/Description)</label>
-          <textarea id="backInput" required></textarea>
-        </div>
-        <button type="submit" style="width:100%;">Add Card</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Import Modal -->
-  <div class="modal" id="importModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Import Flashcards</h2>
-        <button class="close-btn" onclick="closeModal('importModal')">&times;</button>
-      </div>
-      <div class="form-group">
-        <label>Select File (.json, .csv, .py)</label>
-        <input type="file" id="fileInput" accept=".json,.csv,.py,.txt" />
-        <div class="file-name" id="fileName"></div>
-      </div>
-      <button id="processImportBtn" onclick="processImport()" style="width:100%;margin-top:20px;">Import Cards</button>
-    </div>
-  </div>
-
-  <script src="./app.js" defer></script>
-</body>
-</html>
+    <div
