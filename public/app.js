@@ -16,6 +16,7 @@ class FlashcardApp {
     const importBtn = document.getElementById("importBtn");
     const exportBtn = document.getElementById("exportBtn");
     const shuffleBtn = document.getElementById("shuffleBtn");
+    const resetBtn = document.getElementById("resetBtn");
 
     if (!addCardBtn || !addCardForm) return; // safety guard
 
@@ -25,6 +26,15 @@ class FlashcardApp {
     importBtn.addEventListener("click", () => this.openModal("importModal"));
     exportBtn.addEventListener("click", () => this.exportCards());
     shuffleBtn.addEventListener("click", () => this.shuffleCards());
+
+    // ✅ RESET APP FEATURE
+    resetBtn?.addEventListener("click", () => {
+      if (confirm("This will delete ALL flashcards and settings. Continue?")) {
+        localStorage.clear();
+        alert("All local data cleared! Reloading...");
+        location.reload();
+      }
+    });
   }
 
   addCard(e) {
@@ -52,17 +62,15 @@ class FlashcardApp {
   }
 
   exportCards() {
-    if (this.cards.length === 0) {
-      this.showAlert("No cards to export", "error");
-      return;
-    }
-    const blob = new Blob([JSON.stringify(this.cards, null, 2)], {
-      type: "application/json",
-    });
+    const cards = this.cards;
+    if (cards.length === 0) return this.showAlert("No cards to export", "error");
+
+    const blob = new Blob([JSON.stringify(cards, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "flashcards.json";
     a.click();
+    URL.revokeObjectURL(a.href);
   }
 
   toggleTheme() {
@@ -101,8 +109,7 @@ class FlashcardApp {
 
   nextCard(correct) {
     const card = this.cards[this.currentIndex];
-    if (correct) card.level = Math.min((card.level || 0) + 1, 5);
-    else card.level = 0;
+    card.level = correct ? Math.min((card.level || 0) + 1, 5) : 0;
 
     localStorage.setItem("flashcards", JSON.stringify(this.cards));
     this.currentIndex = (this.currentIndex + 1) % this.cards.length;
@@ -133,30 +140,65 @@ class FlashcardApp {
   closeModal(id) {
     document.getElementById(id).classList.remove("active");
   }
-}
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove("active");
-}
+  // ✅ IMPROVED IMPORT HANDLER
+  async processImport() {
+    const fileInput = document.getElementById("fileInput");
+    const file = fileInput.files?.[0];
+    if (!file) return alert("Please select a file first!");
 
-function processImport() {
-  const file = document.getElementById("fileInput").files[0];
-  if (!file) return alert("Please choose a file first!");
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!Array.isArray(data)) throw new Error("Invalid format");
-      const existing = JSON.parse(localStorage.getItem("flashcards")) || [];
-      const merged = [...existing, ...data];
-      localStorage.setItem("flashcards", JSON.stringify(merged));
-      alert("Cards imported successfully!");
-      location.reload();
-    } catch {
-      alert("Failed to import file.");
-    }
-  };
-  reader.readAsText(file);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target.result;
+        let importedCards = [];
+
+        if (file.name.endsWith(".json")) {
+          const parsed = JSON.parse(content);
+          importedCards = parsed.map(c => ({
+            front: c.front ?? c.question ?? c.prompt ?? "",
+            back: c.back ?? c.answer ?? c.response ?? ""
+          }));
+        } else if (file.name.endsWith(".csv")) {
+          const rows = content.split("\n").map(r => r.trim()).filter(r => r);
+          for (const row of rows) {
+            const [front, back] = row.split(",").map(s => s.trim());
+            if (front && back) importedCards.push({ front, back, level: 0 });
+          }
+        } else if (file.name.endsWith(".py")) {
+          const matches = content.match(/\{[^}]+\}/g);
+          if (matches) {
+            for (const m of matches) {
+              try {
+                const obj = JSON.parse(m.replace(/'/g, '"'));
+                if (obj.front && obj.back) importedCards.push({ ...obj, level: 0 });
+              } catch {}
+            }
+          }
+        } else {
+          alert("Unsupported file format. Use .json, .csv, or .py");
+          return;
+        }
+
+        if (importedCards.length === 0) {
+          alert("No valid flashcards found in file.");
+          return;
+        }
+
+        const merged = [...this.cards, ...importedCards];
+        this.cards = merged;
+        localStorage.setItem("flashcards", JSON.stringify(merged));
+        alert(`Imported ${importedCards.length} cards successfully!`);
+        location.reload();
+
+      } catch (err) {
+        console.error(err);
+        alert("Error reading file.");
+      }
+    };
+
+    reader.readAsText(file);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => new FlashcardApp());
