@@ -17,7 +17,7 @@ class FlashcardApp {
     const exportBtn = document.getElementById("exportBtn");
     const shuffleBtn = document.getElementById("shuffleBtn");
     const resetBtn = document.getElementById("resetBtn");
-    const importFileBtn = document.getElementById("importFileBtn"); // button inside modal
+    const importFileBtn = document.getElementById("processImportBtn"); // button inside modal
 
     if (!addCardBtn || !addCardForm) return;
 
@@ -27,7 +27,6 @@ class FlashcardApp {
     importBtn.addEventListener("click", () => this.openModal("importModal"));
     exportBtn.addEventListener("click", () => this.exportCards());
     shuffleBtn.addEventListener("click", () => this.shuffleCards());
-
     resetBtn?.addEventListener("click", () => this.resetApp());
     importFileBtn?.addEventListener("click", () => this.processImport());
   }
@@ -60,11 +59,12 @@ class FlashcardApp {
     if (this.cards.length === 0) return this.showAlert("No cards to export", "error");
 
     const blob = new Blob([JSON.stringify(this.cards, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    a.href = url;
     a.download = "flashcards.json";
     a.click();
-    URL.revokeObjectURL(a.href);
+    URL.revokeObjectURL(url);
   }
 
   resetApp() {
@@ -164,7 +164,8 @@ class FlashcardApp {
         } else if (file.name.endsWith(".csv")) {
           const rows = content.split("\n").map(r => r.trim()).filter(r => r);
           for (const row of rows) {
-            const [front, back] = row.split(",").map(s => s.trim());
+            const [front, ...rest] = row.split(",");
+            const back = rest.join(",").trim();
             if (front && back) importedCards.push({ front, back, level: 0 });
           }
         } else if (file.name.endsWith(".py")) {
